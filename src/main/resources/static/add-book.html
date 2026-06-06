@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookwise — Add Book</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>Bookwise Library System</h1>
+    <nav>
+        <a href="index.html">Books</a>
+        <a href="add-book.html">+ Add Book</a>
+    </nav>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>Add New Book</h2>
+
+        <div id="alert" class="alert"></div>
+
+        <form onsubmit="addBook(event)">
+            <div class="form-group">
+                <label for="title">Title *</label>
+                <input type="text" id="title" placeholder="Enter book title" required>
+            </div>
+            <div class="form-group">
+                <label for="author">Author *</label>
+                <input type="text" id="author" placeholder="Enter author name" required>
+            </div>
+            <div class="form-group">
+                <label for="isbn">ISBN</label>
+                <input type="text" id="isbn" placeholder="e.g. 978-0132350884">
+            </div>
+            <div class="form-group">
+                <label for="available">Available</label>
+                <select id="available">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">Add Book</button>
+                <a href="index.html" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function addBook(event) {
+        event.preventDefault();
+        const book = {
+            title: document.getElementById('title').value,
+            author: document.getElementById('author').value,
+            isbn: document.getElementById('isbn').value,
+            available: document.getElementById('available').value === 'true'
+        };
+        const response = await fetch('http://localhost:8080/api/books', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(book)
+        });
+        if (response.ok) {
+            window.location.href = 'index.html';
+        } else {
+            showAlert('Failed to add book. Please try again.', 'error');
+        }
+    }
+
+    function showAlert(message, type) {
+        const el = document.getElementById('alert');
+        el.textContent = message;
+        el.className = `alert alert-${type}`;
+        el.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

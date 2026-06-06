@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookwise — Library</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>Bookwise Library System</h1>
+    <nav>
+        <a href="index.html">Books</a>
+        <a href="add-book.html">+ Add Book</a>
+    </nav>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>All Books</h2>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="toolbar">
+            <input type="text" id="search-input" placeholder="Search by title..." oninput="handleSearch()">
+            <a href="add-book.html" class="btn btn-success">+ Add Book</a>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>ISBN</th>
+                    <th>Available</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="book-list">
+                <tr><td colspan="6">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function loadBooks() {
+        const response = await fetch('http://localhost:8080/api/books');
+        const books = await response.json();
+        renderBooks(books);
+    }
+
+    function renderBooks(books) {
+        const tbody = document.getElementById('book-list');
+        if (books.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">No books found.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        books.forEach(book => {
+            const badge = book.available
+                ? '<span class="badge badge-yes">Yes</span>'
+                : '<span class="badge badge-no">No</span>';
+            tbody.innerHTML += `
+                <tr>
+                    <td>${book.id}</td>
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.isbn || '—'}</td>
+                    <td>${badge}</td>
+                    <td>
+                        <a href="edit-book.html?id=${book.id}" class="btn btn-primary" style="margin-right:6px;">Edit</a>
+                        <button class="btn btn-danger" onclick="deleteBook(${book.id})">Delete</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    async function handleSearch() {
+        const title = document.getElementById('search-input').value.trim();
+        if (title === '') {
+            loadBooks();
+            return;
+        }
+        const response = await fetch(`http://localhost:8080/api/books/search?title=${encodeURIComponent(title)}`);
+        const books = await response.json();
+        renderBooks(books);
+    }
+
+    async function deleteBook(id) {
+        if (!confirm('Delete this book?')) return;
+        const response = await fetch(`http://localhost:8080/api/books/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            showAlert('Book deleted successfully.', 'success');
+            loadBooks();
+        } else {
+            showAlert('Failed to delete book.', 'error');
+        }
+    }
+
+    function showAlert(message, type) {
+        const el = document.getElementById('alert');
+        el.textContent = message;
+        el.className = `alert alert-${type}`;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    loadBooks();
+</script>
+
+</body>
+</html>
